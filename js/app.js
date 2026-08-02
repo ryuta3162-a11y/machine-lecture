@@ -21,12 +21,37 @@
   const dateRangeInfo = document.getElementById("date-range-info");
   const bookingPicked = document.getElementById("booking-picked");
   const pickedSummary = document.getElementById("picked-summary");
+  const timeMeta = document.getElementById("time-meta");
   const successView = document.getElementById("success-view");
   const completeOverlay = document.getElementById("complete-overlay");
   const submitBtn = document.getElementById("submit-btn");
   const ageInput = document.getElementById("age");
+  const ageError = document.getElementById("age-error");
+  const nameInput = document.getElementById("name");
   const hero = document.querySelector(".hero");
   const siteHeader = document.querySelector(".site-header");
+  const successWaitLine = document.getElementById("success-wait-line");
+
+  const ageMessage = () =>
+    t("form.ageInvalid", "16歳以上の方が対象です");
+
+  const clearAgeError = () => {
+    ageInput.setCustomValidity("");
+    ageError.hidden = true;
+    ageError.textContent = "";
+  };
+
+  const showAgeError = () => {
+    const msg = ageMessage();
+    ageInput.setCustomValidity(msg);
+    ageError.textContent = msg;
+    ageError.hidden = false;
+  };
+
+  const isAgeValid = () => {
+    const age = Number(ageInput.value);
+    return Number.isFinite(age) && age >= 16 && age <= 100;
+  };
 
   const t = (key, fallback) =>
     window.JoyfitI18n ? JoyfitI18n.t(key, fallback) : fallback;
@@ -166,10 +191,11 @@
 
   for (let h = 11; h < 20; h++) {
     ["00", "30"].forEach((min) => {
-      const time = `${h}:${min}`;
+      const time = `${String(h).padStart(2, "0")}:${min}`;
       const id = `time-${h}-${min}`;
       const wrap = document.createElement("div");
       wrap.className = "time-slot";
+      wrap.dataset.time = time;
       wrap.innerHTML = `
         <input type="radio" name="time_choice" id="${id}" value="${time}">
         <label for="${id}">${time}</label>
@@ -177,6 +203,17 @@
       timeGrid.appendChild(wrap);
     });
   }
+
+  let bookedTimes = new Set();
+  let slotsRequestId = 0;
+
+  const normalizeTime = (value) => {
+    const m = String(value || "")
+      .trim()
+      .match(/(\d{1,2})[:：](\d{2})/);
+    if (!m) return String(value || "").trim();
+    return `${String(Number(m[1])).padStart(2, "0")}:${m[2]}`;
+  };
 
   const updatePicked = () => {
     if (bookingDate.value && bookingTime.value) {
@@ -196,14 +233,77 @@
     updatePicked();
   };
 
-  const setTimeEnabled = (enabled) => {
+  const applyTimeAvailability = (enabled) => {
     timeGrid.dataset.disabled = enabled ? "false" : "true";
-    timeGrid.querySelectorAll('input[type="radio"]').forEach((r) => {
-      r.disabled = !enabled;
+    timeGrid.classList.toggle("is-loading", false);
+
+    let bookedCount = 0;
+    timeGrid.querySelectorAll(".time-slot").forEach((slot) => {
+      const input = slot.querySelector('input[type="radio"]');
+      const time = normalizeTime(input.value);
+      const booked = enabled && bookedTimes.has(time);
+      slot.classList.toggle("is-booked", booked);
+      input.disabled = !enabled || booked;
+      if (booked) {
+        bookedCount += 1;
+        if (input.checked) {
+          input.checked = false;
+          bookingTime.value = "";
+        }
+      }
     });
+
+    if (!enabled) {
+      timeMeta.hidden = true;
+      timeMeta.textContent = "";
+    } else if (bookedCount > 0) {
+      timeMeta.hidden = false;
+      timeMeta.textContent = t(
+        "booking.bookedHint",
+        "グレーの時間は既に予約済みのため選べません"
+      );
+    } else {
+      timeMeta.hidden = true;
+      timeMeta.textContent = "";
+    }
+    updatePicked();
   };
 
-  setTimeEnabled(false);
+  const fetchBookedTimes = async (date) => {
+    const url = `${ACTION_URL}?action=slots&date=${encodeURIComponent(date)}`;
+    const res = await fetch(url, { method: "GET", redirect: "follow" });
+    if (!res.ok) throw new Error(`slots ${res.status}`);
+    const data = await res.json();
+    if (!data || data.ok === false) throw new Error(data?.error || "slots failed");
+    return (data.booked || []).map(normalizeTime);
+  };
+
+  const refreshBookedSlots = async (date) => {
+    const reqId = ++slotsRequestId;
+    bookedTimes = new Set();
+    timeGrid.classList.add("is-loading");
+    timeMeta.hidden = false;
+    timeMeta.textContent = t("booking.loadingSlots", "空き状況を確認しています…");
+
+    try {
+      const times = await fetchBookedTimes(date);
+      if (reqId !== slotsRequestId) return;
+      bookedTimes = new Set(times);
+      applyTimeAvailability(true);
+    } catch (err) {
+      console.warn("[slots]", err);
+      if (reqId !== slotsRequestId) return;
+      bookedTimes = new Set();
+      applyTimeAvailability(true);
+      timeMeta.hidden = false;
+      timeMeta.textContent = t(
+        "booking.slotsFallback",
+        "空き状況を取得できませんでした。時間を選んで進めてください"
+      );
+    }
+  };
+
+  applyTimeAvailability(false);
 
   timeGrid.addEventListener("change", (e) => {
     if (e.target.matches('input[type="radio"]')) {
@@ -218,7 +318,7 @@
 
     if (!bookingDate.value) {
       clearTimeSelection();
-      setTimeEnabled(false);
+      applyTimeAvailability(false);
       return;
     }
 
@@ -229,7 +329,7 @@
     if (day === 1 || day === 4) {
       bookingDate.value = "";
       clearTimeSelection();
-      setTimeEnabled(false);
+      applyTimeAvailability(false);
       dateError.textContent = t(
         "booking.monThuError",
         "月曜・木曜は予約できません"
@@ -238,12 +338,28 @@
       return;
     }
 
-    setTimeEnabled(true);
-    updatePicked();
+    clearTimeSelection();
+    refreshBookedSlots(bookingDate.value);
   });
 
   ageInput.addEventListener("input", () => {
-    ageInput.setCustomValidity("");
+    if (!ageInput.value || isAgeValid()) {
+      clearAgeError();
+      return;
+    }
+    showAgeError();
+  });
+
+  ageInput.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    if (!ageInput.value || !isAgeValid()) {
+      showAgeError();
+      ageInput.reportValidity();
+      return;
+    }
+    clearAgeError();
+    document.getElementById("email")?.focus();
   });
 
   const showCompleteScreen = () => {
@@ -268,18 +384,16 @@
     }, 900);
   };
 
-  form.addEventListener("submit", (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    ageInput.setCustomValidity("");
-    const age = Number(ageInput.value);
-    if (!Number.isFinite(age) || age < 16 || age > 100) {
-      ageInput.setCustomValidity(
-        t("form.ageInvalid", "正しい年齢を入力してください。")
-      );
+    if (!ageInput.value || !isAgeValid()) {
+      showAgeError();
       ageInput.reportValidity();
+      ageInput.focus();
       return;
     }
+    clearAgeError();
 
     if (!form.checkValidity()) {
       form.reportValidity();
@@ -296,18 +410,54 @@
       return;
     }
 
+    if (bookedTimes.has(normalizeTime(bookingTime.value))) {
+      alert(
+        t(
+          "booking.slotTaken",
+          "選択した時間はすでに予約済みです。別の時間を選んでください。"
+        )
+      );
+      refreshBookedSlots(bookingDate.value);
+      return;
+    }
+
+    submitBtn.textContent = t("form.submitting", "送信中...");
+    submitBtn.disabled = true;
+
+    // 送信直前にもう一度空き確認（同時申込対策）
+    try {
+      const latest = await fetchBookedTimes(bookingDate.value);
+      bookedTimes = new Set(latest);
+      applyTimeAvailability(true);
+      if (bookedTimes.has(normalizeTime(bookingTime.value))) {
+        alert(
+          t(
+            "booking.slotTaken",
+            "選択した時間はすでに予約済みです。別の時間を選んでください。"
+          )
+        );
+        submitBtn.textContent = t("form.submit", "予約する");
+        submitBtn.disabled = false;
+        return;
+      }
+    } catch (err) {
+      console.warn("[slots recheck]", err);
+    }
+
     const selectedMachines = [...selectedIds].map((id) => byId[id]).filter(Boolean);
     // シートには日本語名で保存
     userRequestFinal.value = selectedMachines.map((m) => m.name).join(", ");
 
+    const guestName = (nameInput.value || "").trim();
     document.getElementById("confirm-date").textContent = bookingDate.value;
     document.getElementById("confirm-time").textContent = bookingTime.value;
     document.getElementById("confirm-tags").textContent = selectedMachines
       .map((m) => machineName(m))
       .join(" / ");
-
-    submitBtn.textContent = t("form.submitting", "送信中...");
-    submitBtn.disabled = true;
+    successWaitLine.textContent = t(
+      "success.wait",
+      "{name} 様のご来館を心よりお待ちしております。"
+    ).replace("{name}", guestName || "お客様");
 
     form.submit();
     showCompleteScreen();
@@ -317,6 +467,9 @@
     updateRangeInfo();
     updateCount();
     renderMachines();
+    if (!ageError.hidden) {
+      showAgeError();
+    }
     if (!dateError.hidden) {
       dateError.textContent = t(
         "booking.monThuError",

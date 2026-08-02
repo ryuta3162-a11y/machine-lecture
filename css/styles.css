@@ -536,6 +536,23 @@ body {
   color: #fff;
 }
 
+.time-slot.is-booked label {
+  background: #e6e7eb;
+  border-color: #d4d5da;
+  color: #9a9ca3;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+.time-slot.is-booked label:hover {
+  border-color: #d4d5da;
+}
+
+.time-grid.is-loading {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
 .time-grid[data-disabled="true"] {
   opacity: 0.35;
   pointer-events: none;

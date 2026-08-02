@@ -62,7 +62,8 @@
           </div>
           <div class="field">
             <label for="age"><span data-i18n="form.age">年齢</span> <abbr title="必須" data-i18n-title="form.required">*</abbr></label>
-            <input type="number" id="age" name="age" inputmode="numeric" min="16" max="100" required placeholder="30">
+            <input type="number" id="age" name="age" inputmode="numeric" min="1" max="100" required placeholder="30">
+            <p id="age-error" class="field-error" hidden></p>
           </div>
           <div class="field field-span">
             <label for="email"><span data-i18n="form.email">メールアドレス</span> <abbr title="必須" data-i18n-title="form.required">*</abbr></label>
@@ -119,6 +120,7 @@
           <fieldset class="time-fieldset">
             <legend><span data-i18n="form.time">時間</span> <abbr title="必須" data-i18n-title="form.required">*</abbr></legend>
             <div id="time-grid" class="time-grid" role="radiogroup" aria-label="時間" data-i18n-aria-label="form.time"></div>
+            <p id="time-meta" class="field-meta" hidden></p>
             <input type="hidden" id="booking_time" name="booking_time" required>
           </fieldset>
         </div>
@@ -142,9 +144,9 @@
         </svg>
       </div>
       <p class="success-kicker" data-i18n="success.kicker">COMPLETE</p>
-      <h2 data-i18n="success.title">申請が完了しました</h2>
+      <h2 data-i18n="success.title">お申し込み完了</h2>
       <p class="success-thanks" data-i18n="success.thanks">ありがとうございます</p>
-      <p class="success-lead" data-i18n="success.lead">ご入力のメールアドレスに確認メールを送信しました。必ずご確認ください。</p>
+      <p class="success-lead" data-i18n="success.lead">ご指定のメールアドレス宛てに、確認メッセージをお送りしました。内容をご確認ください。</p>
       <dl class="success-summary">
         <div>
           <dt data-i18n="success.datetime">日時</dt>
@@ -155,8 +157,8 @@
           <dd id="confirm-tags"></dd>
         </div>
       </dl>
-      <p class="success-wait" data-i18n="success.wait">スタッフ一同、お待ちしております。</p>
-      <p class="success-note" data-i18n="success.note">メールが届かない場合は、迷惑メールフォルダもご確認ください。キャンセルは店舗までお電話をお願いします。</p>
+      <p class="success-wait" id="success-wait-line"></p>
+      <p class="success-note" data-i18n="success.note">メールが届かない場合は、迷惑メールフォルダもご確認ください。キャンセルは、確認メールへの返信にてご連絡ください。</p>
     </section>
   </main>
 
@@ -168,7 +170,7 @@
           <path class="complete-overlay__check" d="M18 33.5L27 42.5L46 22" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
-      <p class="complete-overlay__label" data-i18n="success.flash">受付完了</p>
+      <p class="complete-overlay__label" data-i18n="success.flash">お申し込み完了</p>
     </div>
   </div>
 

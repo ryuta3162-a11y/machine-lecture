@@ -235,7 +235,7 @@
 
   const applyTimeAvailability = (enabled) => {
     timeGrid.dataset.disabled = enabled ? "false" : "true";
-    timeGrid.classList.toggle("is-loading", false);
+    timeGrid.classList.remove("is-loading");
 
     let bookedCount = 0;
     timeGrid.querySelectorAll(".time-slot").forEach((slot) => {
@@ -269,21 +269,49 @@
     updatePicked();
   };
 
-  const fetchBookedTimes = async (date) => {
-    const url = `${ACTION_URL}?action=slots&date=${encodeURIComponent(date)}`;
-    const res = await fetch(url, { method: "GET", redirect: "follow" });
-    if (!res.ok) throw new Error(`slots ${res.status}`);
-    const data = await res.json();
-    if (!data || data.ok === false) throw new Error(data?.error || "slots failed");
-    return (data.booked || []).map(normalizeTime);
-  };
+  const fetchBookedTimesJsonp = (date, timeoutMs = 3500) =>
+    new Promise((resolve, reject) => {
+      const cbName = `joyfitSlots_${Date.now()}_${Math.floor(Math.random() * 1e6)}`;
+      const script = document.createElement("script");
+      let settled = false;
+
+      const cleanup = () => {
+        window.clearTimeout(timer);
+        delete window[cbName];
+        if (script.parentNode) script.parentNode.removeChild(script);
+      };
+
+      const finish = (fn, value) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        fn(value);
+      };
+
+      const timer = window.setTimeout(() => {
+        finish(reject, new Error("slots timeout"));
+      }, timeoutMs);
+
+      window[cbName] = (data) => {
+        if (!data || data.ok === false) {
+          finish(reject, new Error(data?.error || "slots failed"));
+          return;
+        }
+        finish(resolve, (data.booked || []).map(normalizeTime));
+      };
+
+      script.onerror = () => finish(reject, new Error("slots script error"));
+      script.src = `${ACTION_URL}?action=slots&date=${encodeURIComponent(date)}&callback=${cbName}`;
+      document.head.appendChild(script);
+    });
+
+  const fetchBookedTimes = (date) => fetchBookedTimesJsonp(date, 3500);
 
   const refreshBookedSlots = async (date) => {
     const reqId = ++slotsRequestId;
+    // 待たせず先に選択可能にする（予約済みは後からグレーアウト）
     bookedTimes = new Set();
-    timeGrid.classList.add("is-loading");
-    timeMeta.hidden = false;
-    timeMeta.textContent = t("booking.loadingSlots", "空き状況を確認しています…");
+    applyTimeAvailability(true);
 
     try {
       const times = await fetchBookedTimes(date);
@@ -293,13 +321,9 @@
     } catch (err) {
       console.warn("[slots]", err);
       if (reqId !== slotsRequestId) return;
+      // 取得失敗時も選択は続行（送信時にサーバー側で二重予約を拒否）
       bookedTimes = new Set();
       applyTimeAvailability(true);
-      timeMeta.hidden = false;
-      timeMeta.textContent = t(
-        "booking.slotsFallback",
-        "空き状況を取得できませんでした。時間を選んで進めてください"
-      );
     }
   };
 

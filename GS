@@ -25,17 +25,19 @@ function doGet(e) {
     e = e || { parameter: {} };
     var action = String((e.parameter && e.parameter.action) || "");
     if (action === "slots") {
-      return jsonOutput_({
+      var date = String(e.parameter.date || "");
+      var payload = {
         ok: true,
-        date: String(e.parameter.date || ""),
-        booked: getBookedTimes_(String(e.parameter.date || "")),
-      });
+        date: date,
+        booked: getBookedTimesCached_(date),
+      };
+      return jsonOutput_(payload, e.parameter.callback);
     }
     return ContentService.createTextOutput(
       "JOYFIT24 Kyodo Machine Lecture API"
     );
   } catch (error) {
-    return jsonOutput_({ ok: false, error: String(error) });
+    return jsonOutput_({ ok: false, error: String(error) }, e && e.parameter && e.parameter.callback);
   }
 }
 
@@ -63,6 +65,7 @@ function doPost(e) {
     }
 
     sheet.appendRow([new Date(), name, age, email, userRequest, date, time]);
+    invalidateSlotsCache_(date);
 
     // --- お客様へ自動返信（HTML） ---
     if (email) {
@@ -202,11 +205,33 @@ function getSheet_() {
   return sheet;
 }
 
-/** 指定日の予約済み開始時刻一覧（HH:MM） */
-function getBookedTimes_(dateStr) {
+/** 指定日の予約済み開始時刻一覧（HH:MM） — キャッシュ優先で高速化 */
+function getBookedTimesCached_(dateStr) {
   var date = normalizeDate_(dateStr);
   if (!date) return [];
-  return getBookedTimesFromSheet_(getSheet_(), date);
+
+  var cache = CacheService.getScriptCache();
+  var key = "slots:" + date;
+  var cached = cache.get(key);
+  if (cached) {
+    try {
+      return JSON.parse(cached);
+    } catch (ignore) {}
+  }
+
+  var booked = getBookedTimesFromSheet_(getSheet_(), date);
+  cache.put(key, JSON.stringify(booked), 120); // 2分
+  return booked;
+}
+
+function getBookedTimes_(dateStr) {
+  return getBookedTimesCached_(dateStr);
+}
+
+function invalidateSlotsCache_(dateStr) {
+  var date = normalizeDate_(dateStr);
+  if (!date) return;
+  CacheService.getScriptCache().remove("slots:" + date);
 }
 
 function getBookedTimesFromSheet_(sheet, date) {
@@ -260,8 +285,15 @@ function normalizeTime_(value) {
   return ("0" + Number(m[1])).slice(-2) + ":" + m[2];
 }
 
-function jsonOutput_(obj) {
-  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(
+function jsonOutput_(obj, callback) {
+  var body = JSON.stringify(obj);
+  var cb = String(callback || "").replace(/[^\w.$]/g, "");
+  if (cb) {
+    return ContentService.createTextOutput(cb + "(" + body + ")").setMimeType(
+      ContentService.MimeType.JAVASCRIPT
+    );
+  }
+  return ContentService.createTextOutput(body).setMimeType(
     ContentService.MimeType.JSON
   );
 }

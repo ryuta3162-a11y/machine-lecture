@@ -1,0 +1,192 @@
+/******************************************************************************
+ * JOYFIT24経堂 — 20分無料マシンレクチャー申込（GAS）
+ *
+ * 使い方:
+ * 1. Apps Script にこのコードを貼り付け
+ * 2. スプレッドシートをスクリプトに紐付け（または ID を確認）
+ * 3. デプロイ → 新しいデプロイ → 種類: ウェブアプリ
+ *    - 実行ユーザー: 自分
+ *    - アクセスできるユーザー: 全員
+ * 4. 発行された Web アプリ URL を フロントの ACTION_URL に設定
+ *
+ * ※サイト本体は Vercel で公開。GAS は受付・シート保存・メール送信のみ。
+ ******************************************************************************/
+
+function doGet() {
+  return ContentService.createTextOutput("JOYFIT24 Kyodo Machine Lecture API");
+}
+
+function doPost(e) {
+  try {
+    // === 設定 ===
+    const SPREADSHEET_ID = "1wntzhyPGcz9hW4saswppYmVG-zHINbjAibu9VkCyEQ8";
+    const SHEET_NAME = "マシンレクチャー申込";
+    const STORE_EMAIL =
+      "r-kusaka@okamoto-group.co.jp,jf-kyoudou@okamoto-group.co.jp,yuka-hachiya@okamoto-group.co.jp,mito-sato@okamoto-group.co.jp";
+    // ===========
+
+    const params = e.parameter;
+    const name = params.name || "名無し";
+    const age = params.age || "";
+    const email = params.email || "";
+    const userRequest = params.user_request || "なし"; // 選択マシン（日本語）
+    const date = params.booking_date || "";
+    const time = params.booking_time || "";
+
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheet = ss.getSheetByName(SHEET_NAME);
+    if (!sheet) {
+      throw new Error(
+        `シート「${SHEET_NAME}」が見つかりません。スプレッドシートのタブ名を確認してください。`
+      );
+    }
+
+    sheet.appendRow([new Date(), name, age, email, userRequest, date, time]);
+
+    // --- お客様へ自動返信（HTML） ---
+    if (email) {
+      const userSubject =
+        "【JOYFIT24経堂】20分無料マシンレクチャーのご予約ありがとうございます";
+
+      const userText =
+`${name} 様
+
+JOYFIT24経堂の20分無料マシンレクチャーにお申し込みいただき、ありがとうございます。
+以下の内容でご予約を承りました。
+
+■ご予約日時
+日付：${date}
+時間：${time}
+
+■教えてほしいマシン
+${userRequest}
+
+--------------------------------------------------
+当日は開始時間の5分前を目安にご来館ください。
+動きやすい服装と、室内用シューズをご持参ください。
+
+※キャンセルの場合は店舗までお電話ください。
+--------------------------------------------------
+スタッフ一同、お待ちしております。
+JOYFIT24経堂`;
+
+      const userHtml =
+`<!DOCTYPE html>
+<html lang="ja">
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',Meiryo,sans-serif;color:#141414;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f3f4f6;padding:24px 12px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:4px;overflow:hidden;">
+          <tr>
+            <td style="background:#c21642;padding:18px 24px;color:#ffffff;font-size:14px;font-weight:700;letter-spacing:0.06em;">
+              JOYFIT24 経堂
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:28px 24px 8px;font-size:20px;font-weight:900;line-height:1.4;">
+              ご予約ありがとうございます
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 24px 20px;font-size:14px;line-height:1.8;color:#3a3a3a;">
+              ${escapeHtml_(name)} 様<br><br>
+              20分無料マシンレクチャーのお申し込みを受け付けました。<br>
+              ご予約内容をご確認ください。
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 24px 24px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f7f8fa;border-radius:4px;">
+                <tr>
+                  <td style="padding:16px 18px;font-size:13px;line-height:1.7;">
+                    <div style="color:#6b6b6b;font-size:11px;font-weight:700;letter-spacing:0.08em;">ご予約日時</div>
+                    <div style="font-size:16px;font-weight:800;margin:4px 0 14px;">${escapeHtml_(date)}　${escapeHtml_(time)}</div>
+                    <div style="color:#6b6b6b;font-size:11px;font-weight:700;letter-spacing:0.08em;">教えてほしいマシン</div>
+                    <div style="font-size:15px;font-weight:800;color:#c21642;margin-top:4px;">${escapeHtml_(userRequest)}</div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 24px 24px;font-size:13px;line-height:1.8;color:#3a3a3a;">
+              当日は開始時間の<strong>5分前</strong>を目安にご来館ください。<br>
+              動きやすい服装と、室内用シューズをご持参ください。<br><br>
+              スタッフ一同、お待ちしております。
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 24px 24px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.7;color:#6b6b6b;">
+              ※キャンセルの場合は店舗までお電話ください。<br>
+              JOYFIT24経堂
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+      GmailApp.sendEmail(email, userSubject, userText, {
+        htmlBody: userHtml,
+        name: "JOYFIT24経堂",
+      });
+    }
+
+    // --- 店舗通知（HTML） ---
+    const storeSubject = `【新規申込】マシンレクチャー (${name}様)`;
+    const storeText =
+`マシンレクチャーの新規申し込みがありました。
+
+日時：${date} ${time}
+氏名：${name} (${age}歳)
+Email：${email}
+マシン：${userRequest}
+
+スプレッドシート:
+https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/edit`;
+
+    const storeHtml =
+`<!DOCTYPE html>
+<html lang="ja">
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:Meiryo,sans-serif;color:#141414;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="padding:20px 12px;">
+    <tr><td align="center">
+      <table role="presentation" width="100%" style="max-width:560px;background:#fff;border-radius:4px;">
+        <tr><td style="background:#141414;color:#fff;padding:14px 18px;font-weight:700;">【新規申込】マシンレクチャー</td></tr>
+        <tr><td style="padding:18px;font-size:14px;line-height:1.8;">
+          <strong>日時:</strong> ${escapeHtml_(date)} ${escapeHtml_(time)}<br>
+          <strong>氏名:</strong> ${escapeHtml_(name)}（${escapeHtml_(age)}歳）<br>
+          <strong>Email:</strong> ${escapeHtml_(email)}<br>
+          <strong>マシン:</strong> <span style="color:#c21642;font-weight:800;">${escapeHtml_(userRequest)}</span>
+          <p style="margin:16px 0 0;">
+            <a href="https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/edit" style="color:#c21642;">スプレッドシートを開く</a>
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+    GmailApp.sendEmail(STORE_EMAIL, storeSubject, storeText, {
+      htmlBody: storeHtml,
+      name: "マシンレクチャー申込",
+    });
+
+    return ContentService.createTextOutput("Success");
+  } catch (error) {
+    return ContentService.createTextOutput("Error: " + error.toString());
+  }
+}
+
+/** メールHTML用の簡易エスケープ */
+function escapeHtml_(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}

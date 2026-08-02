@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="JOYFIT24経堂｜20分無料マシンレクチャー申込">
+  <title>20分無料マシンレクチャー｜JOYFIT24経堂</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Noto+Sans+SC:wght@400;500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Sans+KR:wght@400;500;700;900&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/i18n.css">
+</head>
+<body>
+  <div class="page-bg" aria-hidden="true"></div>
+
+  <div class="lang-switcher" id="lang-switcher">
+    <button type="button" class="lang-switcher__btn" id="lang-toggle" aria-expanded="false" aria-haspopup="listbox">
+      <span class="lang-switcher__icon" aria-hidden="true">🌐</span>
+      <span class="lang-switcher__label">Language</span>
+      <span class="lang-switcher__sep" aria-hidden="true">|</span>
+      <span class="lang-switcher__current" id="lang-current">日本語</span>
+      <span class="lang-switcher__caret" aria-hidden="true">▼</span>
+    </button>
+    <div class="lang-switcher__menu" id="lang-menu" role="listbox" aria-label="Language">
+      <button type="button" class="lang-switcher__item is-active" data-lang="ja" role="option">日本語</button>
+      <button type="button" class="lang-switcher__item" data-lang="en" role="option">English</button>
+      <button type="button" class="lang-switcher__item" data-lang="zh-CN" role="option">简体中文</button>
+      <button type="button" class="lang-switcher__item" data-lang="zh-TW" role="option">繁體中文</button>
+      <button type="button" class="lang-switcher__item" data-lang="ko" role="option">한국어</button>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <div class="brand">
+      <span class="brand-mark">JOYFIT<span class="brand-num">24</span></span>
+      <span class="brand-store" data-i18n="brand.store">経堂</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <p class="hero-kicker">FREE MACHINE LECTURE</p>
+      <h1 id="hero-title" class="hero-title">
+        <span class="hero-accent" data-i18n="hero.accent">20分無料</span>
+        <span data-i18n="hero.title">マシンレクチャー</span>
+      </h1>
+    </section>
+
+    <form id="booking-form" class="booking-form" novalidate>
+      <iframe name="hidden_iframe" id="hidden_iframe" title="送信用" class="visually-hidden" tabindex="-1"></iframe>
+
+      <section class="form-block" aria-labelledby="step1-title">
+        <div class="form-block-head">
+          <span class="step-num" aria-hidden="true">01</span>
+          <h2 id="step1-title" data-i18n="step1.title">お客様情報</h2>
+        </div>
+        <div class="field-grid">
+          <div class="field">
+            <label for="name"><span data-i18n="form.name">お名前</span> <abbr title="必須" data-i18n-title="form.required">*</abbr></label>
+            <input type="text" id="name" name="name" autocomplete="name" required placeholder="山田 太郎" data-i18n-placeholder="form.namePh">
+          </div>
+          <div class="field">
+            <label for="age"><span data-i18n="form.age">年齢</span> <abbr title="必須" data-i18n-title="form.required">*</abbr></label>
+            <input type="number" id="age" name="age" inputmode="numeric" min="10" max="100" required placeholder="30">
+          </div>
+          <div class="field field-span">
+            <label for="email"><span data-i18n="form.email">メールアドレス</span> <abbr title="必須" data-i18n-title="form.required">*</abbr></label>
+            <input type="email" id="email" name="email" autocomplete="email" required placeholder="example@mail.com">
+          </div>
+        </div>
+      </section>
+
+      <section class="form-block" aria-labelledby="step2-title">
+        <div class="form-block-head">
+          <span class="step-num" aria-hidden="true">02</span>
+          <h2 id="step2-title" data-i18n="step2.title">教えてほしいマシン選択</h2>
+        </div>
+
+        <p class="machines-lead" data-i18n-html="machines.lead">
+          最大3種目まで、レジスタンスマシンの使い方を丁寧にご案内します。<br>
+          1種目だけでもOKです。その場合はより細かく説明します。必ず20分以内で実施します。
+        </p>
+
+        <p class="section-label" data-i18n="machines.partLabel">トレーニングしたい部位</p>
+        <div id="part-area" class="part-grid" role="group" aria-label="部位"></div>
+
+        <div class="machine-section">
+          <div class="machine-section-head">
+            <p class="section-label" data-i18n="machines.pickMachines">教えてほしいマシン（最大3種目）</p>
+            <p id="machine-count" class="machine-count">0 / 3</p>
+          </div>
+          <div id="machine-empty" class="machine-empty" data-i18n="machines.empty">部位を選んでください</div>
+          <div id="machine-grid" class="machine-grid" hidden></div>
+        </div>
+
+        <div id="menu-strip" class="menu-strip" hidden>
+          <span class="menu-strip-label" data-i18n="machines.menuLabel">メニュー</span>
+          <ol id="menu-list" class="menu-list"></ol>
+        </div>
+
+        <input type="hidden" name="user_request" id="user_request_final">
+      </section>
+
+      <section class="form-block" aria-labelledby="step3-title">
+        <div class="form-block-head">
+          <span class="step-num" aria-hidden="true">03</span>
+          <h2 id="step3-title" data-i18n="step3.title">ご予約</h2>
+        </div>
+
+        <div class="booking-panel">
+          <div class="field booking-date-field">
+            <label for="booking_date"><span data-i18n="form.date">日付</span> <abbr title="必須" data-i18n-title="form.required">*</abbr></label>
+            <input type="date" id="booking_date" name="booking_date" required>
+            <p id="date-error" class="field-error" hidden></p>
+            <p id="date-range-info" class="field-meta"></p>
+          </div>
+
+          <fieldset class="time-fieldset">
+            <legend><span data-i18n="form.time">時間</span> <abbr title="必須" data-i18n-title="form.required">*</abbr></legend>
+            <div id="time-grid" class="time-grid" role="radiogroup" aria-label="時間" data-i18n-aria-label="form.time"></div>
+            <input type="hidden" id="booking_time" name="booking_time" required>
+          </fieldset>
+        </div>
+
+        <div id="booking-picked" class="booking-picked" hidden>
+          <span class="booking-picked-label" data-i18n="form.selected">選択中</span>
+          <span id="picked-summary" class="booking-picked-value"></span>
+        </div>
+      </section>
+
+      <div class="form-actions">
+        <button type="submit" id="submit-btn" class="submit-btn" data-i18n="form.submit">予約する</button>
+      </div>
+    </form>
+
+    <section id="success-view" class="success-view" hidden>
+      <div class="success-mark" aria-hidden="true">
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="24" cy="24" r="22" stroke="currentColor" stroke-width="3"/>
+          <path class="success-check" d="M14 24.5L21 31.5L34 17" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <p class="success-kicker" data-i18n="success.kicker">RESERVATION COMPLETE</p>
+      <h2 data-i18n="success.title">予約が完了しました</h2>
+      <p class="success-lead" data-i18n="success.lead">ご入力のメールアドレスに確認メールを送信しました。必ずご確認ください。</p>
+      <dl class="success-summary">
+        <div>
+          <dt data-i18n="success.datetime">日時</dt>
+          <dd><span id="confirm-date"></span> <span id="confirm-time"></span></dd>
+        </div>
+        <div>
+          <dt data-i18n="success.menu">メニュー</dt>
+          <dd id="confirm-tags"></dd>
+        </div>
+      </dl>
+      <p class="success-wait" data-i18n="success.wait">スタッフ一同、お待ちしております。</p>
+      <p class="success-note" data-i18n="success.note">メールが届かない場合は、迷惑メールフォルダもご確認ください。キャンセルは店舗までお電話をお願いします。</p>
+    </section>
+  </main>
+
+  <script src="js/machines.js"></script>
+  <script src="js/locales.bundle.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/app.js" defer></script>
+</body>
+</html>

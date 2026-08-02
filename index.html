@@ -62,7 +62,7 @@
           </div>
           <div class="field">
             <label for="age"><span data-i18n="form.age">年齢</span> <abbr title="必須" data-i18n-title="form.required">*</abbr></label>
-            <input type="number" id="age" name="age" inputmode="numeric" min="10" max="100" required placeholder="30">
+            <input type="number" id="age" name="age" inputmode="numeric" min="16" max="100" required placeholder="30">
           </div>
           <div class="field field-span">
             <label for="email"><span data-i18n="form.email">メールアドレス</span> <abbr title="必須" data-i18n-title="form.required">*</abbr></label>
@@ -78,8 +78,8 @@
         </div>
 
         <p class="machines-lead" data-i18n-html="machines.lead">
-          最大3種目まで、レジスタンスマシンの使い方を丁寧にご案内します。<br>
-          1種目だけでもOKです。その場合はより細かく説明します。必ず20分以内で実施します。
+          最大3つまでマシンの使い方を丁寧にご案内します。<br>
+          1つだけでもOKです。その場合はより細かく説明します。
         </p>
 
         <p class="section-label" data-i18n="machines.partLabel">トレーニングしたい部位</p>
@@ -87,7 +87,7 @@
 
         <div class="machine-section">
           <div class="machine-section-head">
-            <p class="section-label" data-i18n="machines.pickMachines">教えてほしいマシン（最大3種目）</p>
+            <p class="section-label" data-i18n="machines.pickMachines">教えてほしいマシン</p>
             <p id="machine-count" class="machine-count">0 / 3</p>
           </div>
           <div id="machine-empty" class="machine-empty" data-i18n="machines.empty">部位を選んでください</div>
@@ -134,15 +134,16 @@
       </div>
     </form>
 
-    <section id="success-view" class="success-view" hidden>
+    <section id="success-view" class="success-view" hidden aria-live="polite">
       <div class="success-mark" aria-hidden="true">
         <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="24" cy="24" r="22" stroke="currentColor" stroke-width="3"/>
           <path class="success-check" d="M14 24.5L21 31.5L34 17" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
-      <p class="success-kicker" data-i18n="success.kicker">RESERVATION COMPLETE</p>
-      <h2 data-i18n="success.title">予約が完了しました</h2>
+      <p class="success-kicker" data-i18n="success.kicker">COMPLETE</p>
+      <h2 data-i18n="success.title">申請が完了しました</h2>
+      <p class="success-thanks" data-i18n="success.thanks">ありがとうございます</p>
       <p class="success-lead" data-i18n="success.lead">ご入力のメールアドレスに確認メールを送信しました。必ずご確認ください。</p>
       <dl class="success-summary">
         <div>
@@ -158,6 +159,18 @@
       <p class="success-note" data-i18n="success.note">メールが届かない場合は、迷惑メールフォルダもご確認ください。キャンセルは店舗までお電話をお願いします。</p>
     </section>
   </main>
+
+  <div id="complete-overlay" class="complete-overlay" hidden aria-hidden="true">
+    <div class="complete-overlay__card">
+      <div class="complete-overlay__mark" aria-hidden="true">
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle class="complete-overlay__ring" cx="32" cy="32" r="28" stroke="currentColor" stroke-width="3"/>
+          <path class="complete-overlay__check" d="M18 33.5L27 42.5L46 22" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <p class="complete-overlay__label" data-i18n="success.flash">受付完了</p>
+    </div>
+  </div>
 
   <script src="js/machines.js"></script>
   <script src="js/locales.bundle.js"></script>

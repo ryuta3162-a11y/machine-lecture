@@ -22,7 +22,11 @@
   const bookingPicked = document.getElementById("booking-picked");
   const pickedSummary = document.getElementById("picked-summary");
   const successView = document.getElementById("success-view");
+  const completeOverlay = document.getElementById("complete-overlay");
   const submitBtn = document.getElementById("submit-btn");
+  const ageInput = document.getElementById("age");
+  const hero = document.querySelector(".hero");
+  const siteHeader = document.querySelector(".site-header");
 
   const t = (key, fallback) =>
     window.JoyfitI18n ? JoyfitI18n.t(key, fallback) : fallback;
@@ -111,7 +115,7 @@
         if (input.checked) {
           if (selectedIds.size >= MAX) {
             input.checked = false;
-            alert(t("machines.maxAlert", "マシンは最大3種目まで選べます。"));
+            alert(t("machines.maxAlert", "マシンは最大3つまで選べます。"));
             return;
           }
           selectedIds.add(machine.id);
@@ -238,8 +242,44 @@
     updatePicked();
   });
 
+  ageInput.addEventListener("input", () => {
+    ageInput.setCustomValidity("");
+  });
+
+  const showCompleteScreen = () => {
+    completeOverlay.hidden = false;
+    completeOverlay.classList.add("is-visible");
+    document.body.classList.add("is-completing");
+
+    window.setTimeout(() => {
+      form.hidden = true;
+      if (hero) hero.hidden = true;
+      if (siteHeader) siteHeader.classList.add("is-compact");
+      successView.hidden = false;
+      document.body.classList.remove("is-completing");
+      document.body.classList.add("is-complete");
+      completeOverlay.classList.add("is-leaving");
+
+      window.setTimeout(() => {
+        completeOverlay.hidden = true;
+        completeOverlay.classList.remove("is-visible", "is-leaving");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }, 320);
+    }, 900);
+  };
+
   form.addEventListener("submit", (e) => {
     e.preventDefault();
+
+    ageInput.setCustomValidity("");
+    const age = Number(ageInput.value);
+    if (!Number.isFinite(age) || age < 16 || age > 100) {
+      ageInput.setCustomValidity(
+        t("form.ageInvalid", "正しい年齢を入力してください。")
+      );
+      ageInput.reportValidity();
+      return;
+    }
 
     if (!form.checkValidity()) {
       form.reportValidity();
@@ -270,13 +310,7 @@
     submitBtn.disabled = true;
 
     form.submit();
-
-    window.setTimeout(() => {
-      form.hidden = true;
-      document.querySelector(".hero").hidden = true;
-      successView.hidden = false;
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }, 1200);
+    showCompleteScreen();
   });
 
   window.addEventListener("joyfit:langchange", () => {

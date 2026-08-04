@@ -399,8 +399,23 @@ body {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  object-position: center center;
   display: block;
   background: #fff;
+  /* 画像下部に焼き込まれた名前を隠し、下のHTML名だけ見せる */
+  clip-path: inset(0 0 13% 0);
+}
+
+.machine-name {
+  display: block;
+  margin-top: 0.35rem;
+  padding: 0 0.15rem 0.05rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+  text-align: center;
+  color: var(--ink);
 }
 
 .machines-lead {

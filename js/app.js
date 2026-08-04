@@ -131,8 +131,9 @@
         <input type="checkbox" class="machine-check visually-hidden" value="${machine.id}" ${checked ? "checked" : ""}>
         <span class="machine-check-mark" aria-hidden="true"></span>
         <span class="machine-thumb">
-          <img src="${machine.img}" alt="${machineName(machine)}" loading="lazy" width="320" height="240">
+          <img src="${machine.img}" alt="" loading="lazy" width="320" height="240">
         </span>
+        <span class="machine-name">${machineName(machine)}</span>
       `;
 
       const input = card.querySelector("input");

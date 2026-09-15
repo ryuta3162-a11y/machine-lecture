@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>口コミアンケート 500pt（メール用）</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 1200px;
+      height: 675px;
+      overflow: hidden;
+      background: #c21844;
+    }
+    body {
+      font-family: "Noto Sans JP", "Yu Gothic", Meiryo, sans-serif;
+      color: #fff;
+    }
+    .banner {
+      width: 1200px;
+      height: 675px;
+      position: relative;
+      background: #c21844;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      padding: 28px 40px;
+    }
+    .sheen {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 70% 50% at 18% 22%, rgba(255,255,255,0.28), transparent 58%),
+        radial-gradient(ellipse 55% 45% at 88% 28%, rgba(255,210,220,0.12), transparent 60%);
+    }
+    .inner {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      text-align: center;
+    }
+    .store {
+      font-size: 46px;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      line-height: 1.1;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .logo {
+      width: 72px;
+      height: 72px;
+      flex-shrink: 0;
+    }
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      line-height: 0.95;
+    }
+    .brand-text .enjoy {
+      font-size: 52px;
+      font-weight: 900;
+      letter-spacing: 0.1em;
+    }
+    .brand-text .point {
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      padding-left: 4px;
+    }
+    .offer {
+      font-size: 72px;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+      line-height: 1;
+      margin-top: 4px;
+    }
+    .cta {
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      line-height: 1.35;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    <div class="sheen"></div>
+    <div class="inner">
+      <h1 class="store">JOYFIT24 経堂</h1>
+      <div class="brand">
+        <svg class="logo" viewBox="0 0 80 80" aria-hidden="true">
+          <circle cx="40" cy="40" r="40" fill="#ffffff"/>
+          <path fill="#c21844" d="M18 17h12.2L40 37.2 49.8 17H62L46.2 43.6h-12.4L18 17zm13.6 28.4h16.8v6.4H31.6v-6.4zm0 11.2h16.8v6.4H31.6V56.6zM36.8 43.6h6.4v26.2h-6.4V43.6z"/>
+        </svg>
+        <div class="brand-text">
+          <span class="enjoy">ENJOY</span>
+          <span class="point">ポイント</span>
+        </div>
+      </div>
+      <p class="offer">500ptプレゼント</p>
+      <p class="cta">アンケート・クチコミに<br />ご協力ください</p>
+    </div>
+  </div>
+</body>
+</html>

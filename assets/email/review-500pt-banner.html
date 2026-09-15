@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>口コミアンケート 500pt（メール用）</title>
+  <title>口コミアンケート（メール用）</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700;800;900&display=swap" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -22,11 +22,9 @@
       position: relative;
       background: #c21844;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 18px;
-      padding: 28px 40px;
+      padding: 36px 48px;
     }
     .sheen {
       position: absolute;
@@ -42,23 +40,23 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 16px;
+      gap: 22px;
       text-align: center;
     }
-    .store {
-      font-size: 46px;
-      font-weight: 900;
+    .lead {
+      font-size: 42px;
+      font-weight: 800;
       letter-spacing: 0.06em;
-      line-height: 1.1;
+      line-height: 1.35;
     }
     .brand {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 18px;
     }
     .logo {
-      width: 72px;
-      height: 72px;
+      width: 88px;
+      height: 88px;
       flex-shrink: 0;
     }
     .brand-text {
@@ -68,29 +66,21 @@
       line-height: 0.95;
     }
     .brand-text .enjoy {
-      font-size: 52px;
+      font-size: 64px;
       font-weight: 900;
       letter-spacing: 0.1em;
     }
     .brand-text .point {
-      font-size: 34px;
+      font-size: 40px;
       font-weight: 800;
       letter-spacing: 0.12em;
       padding-left: 4px;
     }
-    .offer {
-      font-size: 72px;
+    .store {
+      font-size: 64px;
       font-weight: 900;
-      letter-spacing: 0.02em;
-      line-height: 1;
-      margin-top: 4px;
-    }
-    .cta {
-      font-size: 34px;
-      font-weight: 800;
-      letter-spacing: 0.04em;
-      line-height: 1.35;
-      margin-top: 4px;
+      letter-spacing: 0.06em;
+      line-height: 1.1;
     }
   </style>
 </head>
@@ -98,7 +88,7 @@
   <div class="banner">
     <div class="sheen"></div>
     <div class="inner">
-      <h1 class="store">JOYFIT24 経堂</h1>
+      <p class="lead">口コミへのご協力を<br>お願いいたします</p>
       <div class="brand">
         <svg class="logo" viewBox="0 0 80 80" aria-hidden="true">
           <circle cx="40" cy="40" r="40" fill="#ffffff"/>
@@ -109,8 +99,7 @@
           <span class="point">ポイント</span>
         </div>
       </div>
-      <p class="offer">500ptプレゼント</p>
-      <p class="cta">アンケート・クチコミに<br />ご協力ください</p>
+      <h1 class="store">JOYFIT24 経堂</h1>
     </div>
   </div>
 </body>

@@ -236,6 +236,128 @@ function appendBookingRow_(sheet, name, age, email, userRequest, date, time) {
   SpreadsheetApp.flush();
 }
 
+/**
+ * 過去行の予約日/予約時間を、店舗通知メール「日時：」から埋める／直す
+ */
+function mlRepairPreferredDateTimeFromGmail() {
+  var ui = SpreadsheetApp.getUi();
+  try {
+    var result = mlRepairPreferredDateTimeFromGmail_();
+    ui.alert(
+      "希望日時の修復",
+      "修復: " +
+        result.fixed +
+        " 件\n既に正しい: " +
+        result.ok +
+        " 件\nメールなし/不一致: " +
+        result.miss +
+        " 件\nGmail照合: " +
+        result.mailHits +
+        " 通",
+      ui.ButtonSet.OK
+    );
+  } catch (e) {
+    Logger.log(e);
+    ui.alert("希望日時の修復", "エラー: " + e.message, ui.ButtonSet.OK);
+  }
+}
+
+function mlRepairPreferredDateTimeFromGmail_() {
+  var sheet = getSheet_();
+  ensureBookingHeaders_(sheet);
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return { fixed: 0, ok: 0, miss: 0, mailHits: 0 };
+
+  var mailMap = mlBuildPreferredMapFromGmail_();
+  var fixed = 0;
+  var ok = 0;
+  var miss = 0;
+  var tz = Session.getScriptTimeZone() || "Asia/Tokyo";
+
+  for (var r = 2; r <= lastRow; r++) {
+    var row = sheet.getRange(r, 1, r, 7).getValues()[0];
+    var submittedAt = row[0];
+    var name = String(row[1] || "")
+      .replace(/\s*様\s*$/g, "")
+      .replace(/[ \u3000]+/g, " ")
+      .trim();
+    var email = String(row[3] || "")
+      .trim()
+      .toLowerCase();
+    var curDate = normalizeDate_(row[5]);
+    var curTime = normalizeTime_(row[6]);
+
+    var preferred = null;
+    if (email && mailMap.byEmail[email]) preferred = mailMap.byEmail[email];
+    if (!preferred && name && mailMap.byName[name]) preferred = mailMap.byName[name];
+
+    var looksWrong = false;
+    if (!curDate || !curTime) {
+      looksWrong = true;
+    } else if (submittedAt instanceof Date && !isNaN(submittedAt.getTime())) {
+      var submitDate = Utilities.formatDate(submittedAt, tz, "yyyy-MM-dd");
+      var submitTime = Utilities.formatDate(submittedAt, tz, "HH:mm");
+      if (curDate === submitDate && curTime === submitTime) looksWrong = true;
+    }
+
+    if (!looksWrong) {
+      sheet.getRange(r, 6).setNumberFormat("@").setValue(curDate);
+      sheet.getRange(r, 7).setNumberFormat("@").setValue(curTime);
+      ok++;
+      continue;
+    }
+    if (!preferred || !preferred.date || !preferred.time) {
+      miss++;
+      continue;
+    }
+    sheet.getRange(r, 6).setNumberFormat("@").setValue(preferred.date);
+    sheet.getRange(r, 7).setNumberFormat("@").setValue(preferred.time);
+    fixed++;
+  }
+  SpreadsheetApp.flush();
+  return { fixed: fixed, ok: ok, miss: miss, mailHits: mailMap.count };
+}
+
+function mlBuildPreferredMapFromGmail_() {
+  var byEmail = {};
+  var byName = {};
+  var count = 0;
+  var query = 'subject:"【新規申込】マシンレクチャー" newer_than:400d';
+  var threads = GmailApp.search(query, 0, 300);
+  for (var t = 0; t < threads.length; t++) {
+    var messages = threads[t].getMessages();
+    for (var m = 0; m < messages.length; m++) {
+      var body = String(messages[m].getPlainBody() || messages[m].getBody() || "");
+      body = body
+        .replace(/<br\s*\/?>/gi, "\n")
+        .replace(/<\/p>/gi, "\n")
+        .replace(/<[^>]+>/g, "");
+      var dt = body.match(/日時[：:]\s*([0-9]{4}[\/\-.][0-9]{1,2}[\/\-.][0-9]{1,2})\s+(\d{1,2}:\d{2})/);
+      if (!dt) continue;
+      var emailMatch = body.match(/Email[：:]\s*([^\s\n]+)/i);
+      var nameMatch = body.match(/氏名[：:]\s*([^\n(]+)/);
+      var date = normalizeDate_(dt[1]);
+      var time = normalizeTime_(dt[2]);
+      if (!date || !time) continue;
+      count++;
+      var parsed = {
+        date: date,
+        time: time,
+        email: emailMatch ? String(emailMatch[1]).trim().toLowerCase() : "",
+        name: nameMatch
+          ? String(nameMatch[1])
+              .replace(/\s*様\s*$/g, "")
+              .replace(/[ \u3000]+/g, " ")
+              .trim()
+          : "",
+      };
+      if (parsed.email) byEmail[parsed.email] = parsed;
+      if (parsed.name) byName[parsed.name] = parsed;
+    }
+  }
+  return { byEmail: byEmail, byName: byName, count: count };
+}
+
 /** 指定日の予約済み開始時刻一覧（HH:MM） — キャッシュ優先で高速化 */
 function getBookedTimesCached_(dateStr) {
   var date = normalizeDate_(dateStr);

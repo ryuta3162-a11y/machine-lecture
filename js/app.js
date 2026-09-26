@@ -1,6 +1,6 @@
 (() => {
   const ACTION_URL =
-    "https://script.google.com/macros/s/AKfycbzX3OQCRcW9iHDAdE91fmCinVegWGgsXg64O9pJQFh1HSZy4ecdHDpQNvUHi4qs5jQ3Hg/exec";
+    "https://script.google.com/macros/s/AKfycbzzJNvY2ycpUN_pUacS35DaKmG3KCMKw2PdBhmkQyVXdUxKsyQRXbl4Y4_ijfDnnka9Kw/exec";
 
   const MAX = window.MAX_MACHINES || 3;
   const CATALOG = window.MACHINE_CATALOG || [];

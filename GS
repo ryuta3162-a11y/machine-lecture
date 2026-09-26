@@ -64,7 +64,7 @@ function doPost(e) {
       }
     }
 
-    sheet.appendRow([new Date(), name, age, email, userRequest, date, time]);
+    appendBookingRow_(sheet, name, age, email, userRequest, date, time);
     invalidateSlotsCache_(date);
 
     // --- お客様へ自動返信（HTML） ---
@@ -203,6 +203,37 @@ function getSheet_() {
     );
   }
   return sheet;
+}
+
+/** 見出し行を正す（A〜G）。希望日時は必ず「予約日」「予約時間」列へテキストで書く */
+function ensureBookingHeaders_(sheet) {
+  var headers = [
+    "タイムスタンプ",
+    "名前",
+    "年齢",
+    "メール",
+    "希望(タグ)",
+    "予約日",
+    "予約時間",
+  ];
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold");
+  if (sheet.getFrozenRows() < 1) sheet.setFrozenRows(1);
+  return headers;
+}
+
+/**
+ * 1行追加。希望日時は F=予約日 / G=予約時間 にテキスト固定
+ * （Sheetsの日付自動変換で「送信時刻」に見えるのを防ぐ）
+ */
+function appendBookingRow_(sheet, name, age, email, userRequest, date, time) {
+  ensureBookingHeaders_(sheet);
+  sheet.appendRow([new Date(), name, age, email, userRequest, "", ""]);
+  var row = sheet.getLastRow();
+  // F列=予約日, G列=予約時間（希望日時。A列タイムスタンプとは別）
+  sheet.getRange(row, 6).setNumberFormat("@").setValue(String(date || ""));
+  sheet.getRange(row, 7).setNumberFormat("@").setValue(String(time || ""));
+  SpreadsheetApp.flush();
 }
 
 /** 指定日の予約済み開始時刻一覧（HH:MM） — キャッシュ優先で高速化 */
